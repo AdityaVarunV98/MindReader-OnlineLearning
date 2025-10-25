@@ -1,0 +1,6 @@
+Ignore local python environment folder named "mrg"
+mrg/
+mrg/*
+
+# Python cache files
+__pycache__/
