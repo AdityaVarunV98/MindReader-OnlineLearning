@@ -49,34 +49,6 @@ class Bot:
         bot_move = 2 * np.random.binomial(1, (qt + 1) / 2) - 1
         return self, bot_move
 
-    # def aggregate_experts(self, X, user_strokes, eta):
-    #     yt_all = []
-    #     yt_mat = []
-
-    #     def loss(pred):
-    #         return np.exp(-eta * np.sum(np.abs(np.array(pred[:-1]) - user_strokes)))
-
-    #     for group in [self.bias_detectors, self.bias_detectors_same_diff,
-    #                   self.pattern_detectors, self.pattern_detectors_same_diff,
-    #                   self.reactive_user_detectors, self.reactive_bot_detectors]:
-    #         group_weights = [loss(det.predictions) for det in group]
-    #         yt_all.extend(group_weights)
-    #         yt_mat.append(group_weights)
-
-    #     yt_all = np.array(yt_all)
-    #     yt_all /= np.sum(yt_all)
-    #     qt = np.dot(yt_all, X)
-
-    #     yt_mat_np = np.zeros((6, max(len(g) for g in [self.bias_detectors, self.bias_detectors_same_diff,
-    #                                                  self.pattern_detectors, self.pattern_detectors_same_diff,
-    #                                                  self.reactive_user_detectors, self.reactive_bot_detectors])))
-    #     for i, arr in enumerate(yt_mat):
-    #         yt_mat_np[i, :len(arr)] = arr / np.sum(yt_all)
-    #     self.current_bot_status["experts"] = np.concatenate(
-    #         (self.current_bot_status["experts"], yt_mat_np[:, :, None]), axis=2)
-    #     self.current_bot_status["dec"] = qt
-    #     return self, qt
-
     def aggregate_experts(self, X, user_strokes, eta):
         yt_all = []
         yt_mat = []
