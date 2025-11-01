@@ -1,5 +1,5 @@
 from game import Game
-from agent import RandomAgent  # or your custom agents
+from agent import RandomAgent, AlternateAgent  # or your custom agents
 from expert_params import expert_params
 
 import numpy as np
@@ -30,5 +30,6 @@ def benchmark(agent, num_games=50, game_target=20, bot_memory_reset=True):
 
 
 if __name__ == "__main__":
-    agent = RandomAgent()  # replace with other agents
+    # agent = RandomAgent()  # replace with other agents
+    agent = AlternateAgent()
     benchmark(agent, num_games=1000, game_target=25, bot_memory_reset=True)

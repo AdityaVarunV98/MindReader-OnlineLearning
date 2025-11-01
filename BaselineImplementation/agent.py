@@ -20,6 +20,17 @@ class RandomAgent(BaseAgent):
     def act(self, game_state):
         return 2 * np.random.binomial(1, 0.5) - 1
 
+class AlternateAgent(BaseAgent):
+    """Plays randomly with equal probability"""
+    def __init__(self):
+        super().__init__(name="RandomAgent")
+
+    def act(self, game_state):
+        if game_state["turn"] % 2 == 0:
+            return -1
+        else:
+            return 1
+
 
 class HumanAgent(BaseAgent):
     """Human user input: a=left, d=right, q=quit"""
