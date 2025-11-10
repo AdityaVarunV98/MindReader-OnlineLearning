@@ -1,5 +1,5 @@
 from game import Game
-from agent import RandomAgent, AlternateAgent, BasePlanningAgent  # or your custom agents
+from agent import RandomAgent, AlternateAgent, BasePlanningAgent, SimpleMCPlanningAgent  # or your custom agents
 from expert_params import expert_params
 
 import numpy as np
@@ -14,6 +14,7 @@ def benchmark(agent, num_games=1, game_target=25, bot_memory_reset=True):
         # Convert win = +turns, loss = −turns for metric
         score = turns if winner == "user" else -turns
         results.append(score)
+        print("Game number: ", _)
 
     results = np.array(results)
     wins = np.sum(results > 0)
@@ -30,7 +31,6 @@ def benchmark(agent, num_games=1, game_target=25, bot_memory_reset=True):
 
 
 if __name__ == "__main__":
-    # agent = RandomAgent()  # replace with other agents
-    # agent = AlternateAgent()
-    agent = BasePlanningAgent(verbose=True)
-    benchmark(agent, num_games=10, game_target=25, bot_memory_reset=True)
+    agent = SimpleMCPlanningAgent()
+
+    benchmark(agent, num_games=100, game_target=25, bot_memory_reset=True)

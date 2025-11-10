@@ -2,6 +2,7 @@ import numpy as np
 import copy
 from collections import defaultdict
 from types import SimpleNamespace
+import random
 
 
 class BaseAgent:
@@ -124,6 +125,149 @@ class BasePlanningAgent:
             win_loss = 1
 
         # Reward shaping
+        bias_term = self.reward_weights["bias_factor"] * win_loss
+        step_penalty = self.reward_weights["step"]
+        terminal_reward = 0
+        if user_grade >= target:
+            terminal_reward = self.reward_weights["win"]
+        elif bot_grade >= target:
+            terminal_reward = self.reward_weights["loss"]
+
+        return bias_term + step_penalty + terminal_reward
+    
+
+# Finds the cumulative reward till termination from a state using a random policy, then chooses action using epsilon-greedy
+# ===== BENCHMARK RESULTS =====
+# Games played: 100
+# Wins: 85 (85.0%)
+# Losses: 15 (15.0%)
+# Average score (± turns): 31.84
+# Std dev: 33.84
+class SimpleMCPlanningAgent:
+    def __init__(self, n_simulations=10, epsilon=0.1, gamma=1.0, reward_weights=None, verbose=False):
+        self.n_simulations = n_simulations
+        self.epsilon = epsilon
+        self.gamma = gamma
+        self.verbose = verbose
+
+        self.reward_weights = reward_weights or {
+            "bias_factor": 1.0,
+            "step": -0.01,
+            "win": 10.0,
+            "loss": -10.0
+        }
+
+        self.turn_stats = {"turn": [], "q_left": [], "q_right": [], "chosen_action": []}
+
+    def act(self, game_state):
+        """
+        Choose the best action using Monte Carlo value estimates.
+        game_state: {"bot": bot_copy, "game": game_copy}
+        """
+        bot = game_state["bot"]
+        game = game_state["game"]
+
+        possible_actions = [-1, 1]
+        values = {}
+
+        for a in possible_actions:
+            values[a] = self.simulate_action(bot, game, a)
+
+        if self.verbose:
+            print(f"\n[Turn {game.turn_number}] Q-value estimates:")
+            for a, val in values.items():
+                print(f"  Action {a:+d} → {val:.4f}")
+
+        # Store turn stats
+        self.turn_stats["turn"].append(game.turn_number)
+        self.turn_stats["q_left"].append(values[-1])
+        self.turn_stats["q_right"].append(values[1])
+
+        # ε-greedy choice
+        if np.random.rand() < self.epsilon:
+            chosen = np.random.choice(possible_actions)
+            if self.verbose:
+                print(f"  [ε-Greedy] Randomly chose action {chosen:+d}")
+        else:
+            chosen = max(values, key=values.get)
+            if self.verbose:
+                print(f"  [Greedy] Chose best action {chosen:+d}")
+
+        self.turn_stats["chosen_action"].append(chosen)
+        return chosen
+
+    def simulate_action(self, bot, game, action):
+        """
+        Monte Carlo estimation of Q(action): average cumulative reward until termination.
+        """
+        total_return = 0.0
+        for sim in range(self.n_simulations):
+            sim_return = self.run_full_simulation(bot, game, action)
+            total_return += sim_return
+
+            if self.verbose and sim == 0:
+                print(f"    Simulation {sim + 1}: Total return = {sim_return:.4f}")
+
+        return total_return / self.n_simulations
+
+    def run_full_simulation(self, bot, game, first_action):
+        """
+        Simulate a full episode from the given game state and first chosen action.
+        """
+        sim_game = copy.deepcopy(game)
+        sim_bot = copy.deepcopy(bot)
+
+        # Apply the first agent action
+        sim_game.user_strokes.append(first_action)
+
+        # Bot responds
+        sim_bot, bot_move = sim_bot.bot_play(sim_game)
+        sim_game.bot_strokes.append(bot_move)
+
+        # Update scores and game state
+        sim_game.update_status()
+
+        cumulative_reward = 0.0
+        discount = 1.0
+
+        # Continue the simulated game until terminal
+        while sim_game.user_grade < sim_game.game_target and sim_game.bot_grade < sim_game.game_target:
+            # Compute shaped reward for this step
+            reward = self.compute_reward(sim_game.user_strokes, sim_game.bot_strokes,
+                                        sim_game.user_grade, sim_game.bot_grade,
+                                        sim_game.game_target)
+            cumulative_reward += discount * reward
+            discount *= self.gamma
+
+            # Agent’s next simulated move (simple random policy)
+            sim_action = random.choice([-1, 1])
+            sim_game.user_strokes.append(sim_action)
+
+            # Bot plays its move
+            sim_bot, bot_move = sim_bot.bot_play(sim_game)
+            sim_game.bot_strokes.append(bot_move)
+
+            # Update game state (grades, same/diff, win/loss, turn counter)
+            sim_game.update_status()
+
+            # Check termination (like play_game)
+            if sim_game.user_grade >= sim_game.game_target or sim_game.bot_grade >= sim_game.game_target:
+                break
+
+        return cumulative_reward
+
+
+    def compute_reward(self, user_strokes, bot_strokes, user_grade, bot_grade, target):
+        """
+        Reward shaping for a single step.
+        """
+        if bot_strokes[-1] == user_strokes[-1]:
+            bot_grade += 1
+            win_loss = -1
+        else:
+            user_grade += 1
+            win_loss = 1
+
         bias_term = self.reward_weights["bias_factor"] * win_loss
         step_penalty = self.reward_weights["step"]
         terminal_reward = 0
