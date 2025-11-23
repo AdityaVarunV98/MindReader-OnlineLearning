@@ -48,6 +48,65 @@ class Bot:
 
         bot_move = 2 * np.random.binomial(1, (qt + 1) / 2) - 1
         return self, bot_move
+    
+    def bot_action_probs(self, game, has_played=True):
+        """
+        Return the current probability qt that the bot plays +1 (and thus 1-qt that it plays -1),
+        computed *without* sampling a move.
+
+        This mirrors bot_play, but stops before sampling.
+        """
+        X = []
+
+        for det in self.bias_detectors:
+            if has_played == False:
+                _, p = det.predict(game.user_strokes, game.user_strokes_same_diff, game.turn_number)
+            else:
+                p = det.predictions[-1]
+            X.append(p)
+        for det in self.bias_detectors_same_diff:
+            if has_played == False:
+                _, p = det.predict(game.user_strokes, game.user_strokes_same_diff, game.turn_number)
+            else:
+                p = det.predictions[-1]
+            X.append(p)
+        for det in self.pattern_detectors:
+            if has_played == False:
+                _, p = det.predict(game.user_strokes, game.user_strokes_same_diff, game.turn_number)
+            else:
+                p = det.predictions[-1]
+            X.append(p)
+        for det in self.pattern_detectors_same_diff:
+            if has_played == False:
+                _, p = det.predict(game.user_strokes, game.user_strokes_same_diff, game.turn_number)
+            else:
+                p = det.predictions[-1]
+            X.append(p)
+        for det in self.reactive_user_detectors:
+            if has_played == False:
+                _, p = det.predict(game.user_strokes, game.user_win_loss, game.user_strokes_same_diff, game.turn_number)
+            else:
+                p = det.predictions[-1]
+            X.append(p)
+        for det in self.reactive_bot_detectors:
+            if has_played == False:
+                _, p = det.predict(game.bot_strokes, game.bot_win_loss, game.bot_strokes_same_diff, game.turn_number)
+            else:
+                p = det.predictions[-1]
+            X.append(p)
+
+        X = np.array(X)
+        if game.turn_number > 1:
+            eta = np.sqrt(np.log(self.N) / (2 * game.game_target - 1))
+            _, qt = self.aggregate_experts(X, np.array(game.user_strokes), eta)
+        else:
+            qt = 0.0
+
+        # probability of +1 and -1
+        p_plus = (qt + 1) / 2.0
+        p_minus = 1.0 - p_plus
+        return p_minus, p_plus
+
 
     def aggregate_experts(self, X, user_strokes, eta):
         yt_all = []

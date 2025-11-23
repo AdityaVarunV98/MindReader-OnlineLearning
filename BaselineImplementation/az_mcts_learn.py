@@ -183,6 +183,91 @@ class AlphaZeroMCTSAgent:
         # Each example: (state_vector, policy_target (2,), value_target scalar)
         self.train_buffer = []
 
+    # def _policy_only_action(self, game_state, temperature=0.0):
+    #     """
+    #     Use only the policy network (no MCTS), for fast test-time decisions.
+
+    #     IMPORTANT: We *do not* leak the actual bot move into the encoder.
+    #     Instead, we:
+    #     1) reconstruct the pre-bot-move state,
+    #     2) compute bot's action probabilities from experts,
+    #     3) evaluate the user policy under both hypothetical bot moves (-1 and +1),
+    #     4) sample a bot move from its distribution and pick the corresponding user policy.
+    #     """
+    #     # Work on copies so we don't mutate outside state
+    #     root_bot = copy.deepcopy(game_state["bot"])
+    #     root_game = copy.deepcopy(game_state["game"])
+
+    #     # --- 1) Reconstruct pre-bot-move state for this turn ---
+    #     # We assume the current state has the *latest* bot move already in game.bot_strokes.
+    #     # To avoid leaking that move into the encoder, remove it temporarily.
+    #     had_bot_move = False
+    #     last_bot_move = None
+    #     if len(root_game.bot_strokes) > 0:
+    #         had_bot_move = True
+    #         last_bot_move = root_game.bot_strokes.pop()  # remove last bot move
+
+    #     # --- 2) Compute bot action probabilities from experts on pre-move state ---
+    #     # We do NOT want to call bot_play here (that would sample and re-add).
+    #     # Use the new helper on Bot: bot_action_probs
+    #     p_minus, p_plus = root_bot.bot_action_probs(root_game)  # probs for -1, +1
+    #     bot_action_probs = {-1: p_minus, 1: p_plus}
+
+    #     # Normalize just in case of numerical issues
+    #     total_p = bot_action_probs[-1] + bot_action_probs[1]
+    #     if total_p <= 0:
+    #         # fallback to uniform
+    #         bot_action_probs[-1] = 0.5
+    #         bot_action_probs[1] = 0.5
+    #     else:
+    #         bot_action_probs[-1] /= total_p
+    #         bot_action_probs[1] /= total_p
+
+    #     # --- 3) Evaluate user policy under both hypothetical bot moves ---
+    #     actions = [-1, 1]
+    #     policy_given_bot = {}
+
+    #     for hypothetical_bot_move in [-1, 1]:
+    #         # create a hypothetical game where the bot *would* have played this move
+    #         hyp_game = copy.deepcopy(root_game)
+    #         hyp_bot = copy.deepcopy(root_bot)
+
+    #         # add hypothetical bot move
+    #         hyp_game.bot_strokes.append(hypothetical_bot_move)
+
+    #         # encode this hypothetical state
+    #         state_vec = self.encoder.encode(hyp_bot, hyp_game)
+    #         with torch.no_grad():
+    #             logits, _ = self.net(
+    #                 torch.from_numpy(state_vec).to(self.device).unsqueeze(0)
+    #             )
+    #             probs = torch.softmax(logits, dim=-1).cpu().numpy().flatten()  # shape (2,)
+
+    #         # temperature handling for the user policy given this hypothetical bot move
+    #         if temperature == 0:
+    #             # greedy over actions [-1, +1]
+    #             best_idx = int(np.argmax(probs))
+    #             chosen_action = actions[best_idx]
+    #         else:
+    #             probs = probs / (np.sum(probs) + 1e-12)
+    #             chosen_action = np.random.choice(actions, p=probs)
+
+    #         print(f"Bot Action {hypothetical_bot_move}, probabilities {probs}")
+    #         print(f"Agent Action for this move {chosen_action}")
+
+    #         policy_given_bot[hypothetical_bot_move] = chosen_action
+
+    #     # --- 4) Sample actual bot move from its probabilities, pick user action for that case ---
+    #     bot_move_sampled = np.random.choice([-1, 1], p=[bot_action_probs[-1], bot_action_probs[1]])
+    #     chosen_action = policy_given_bot[bot_move_sampled]
+
+    #     # Optionally: if you want to restore the original bot move in root_game, you can:
+    #     if had_bot_move and last_bot_move is not None:
+    #         root_game.bot_strokes.append(last_bot_move)
+
+    #     return chosen_action
+
+
     def _policy_only_action(self, game_state, temperature=0.0):
         """
         Use only the policy network (no MCTS), for fast test-time decisions.
@@ -207,6 +292,8 @@ class AlphaZeroMCTSAgent:
             # soft sampling from policy distribution
             probs = probs / (np.sum(probs) + 1e-12)
             chosen_action = np.random.choice(actions, p=probs)
+        
+        print(f"Bot action {root_game.bot_strokes[-1]}, agent action {chosen_action}")
 
         return chosen_action
 

@@ -292,6 +292,16 @@ class RandomAgent(BaseAgent):
 
     def act(self, game_state):
         return 2 * np.random.binomial(1, 0.5) - 1
+    
+
+class Bernouli(BaseAgent):
+    """Plays randomly with p probability"""
+    def __init__(self, prob):
+        super().__init__(name="Bernouli")
+        self.prob = prob
+
+    def act(self, game_state):
+        return 2 * np.random.binomial(1, self.prob) - 1
 
 
 class AlternateAgent(BaseAgent):

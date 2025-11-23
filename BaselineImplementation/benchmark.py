@@ -1,5 +1,5 @@
 from game import Game
-from agent import RandomAgent, AlternateAgent, BasePlanningAgent, SimpleMCPlanningAgent  # or your custom agents
+from agent import RandomAgent, AlternateAgent, BasePlanningAgent, SimpleMCPlanningAgent, Bernouli  # or your custom agents
 from expert_params import expert_params
 
 import numpy as np
@@ -32,6 +32,7 @@ def benchmark(agent, num_games=1, game_target=25, bot_memory_reset=True):
 
 if __name__ == "__main__":
     # agent = SimpleMCPlanningAgent()
-    agent = RandomAgent()
+    # agent = RandomAgent()
+    agent = Bernouli(prob=0.3)
 
     benchmark(agent, num_games=100, game_target=50, bot_memory_reset=True)
