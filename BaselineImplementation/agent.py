@@ -278,7 +278,13 @@ class SimpleMCPlanningAgent:
 
         return bias_term + step_penalty + terminal_reward
 
-
+# ===== BENCHMARK RESULTS =====
+# Games played: 100
+# Wins: 49 (49.0%)
+# Losses: 51 (51.0%)
+# Average score (± turns): -0.25
+# Std dev: 9.88
+# Game target=50
 class RandomAgent(BaseAgent):
     """Plays randomly with equal probability"""
     def __init__(self):

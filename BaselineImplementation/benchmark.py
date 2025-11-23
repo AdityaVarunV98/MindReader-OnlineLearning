@@ -12,7 +12,7 @@ def benchmark(agent, num_games=1, game_target=25, bot_memory_reset=True):
         winner, turns = g.play_game()
 
         # Convert win = +turns, loss = −turns for metric
-        score = turns if winner == "user" else -turns
+        score = 2*game_target - turns if winner == "user" else -1*(2*game_target - turns) - 1
         results.append(score)
         print("Game number: ", _)
 
@@ -31,6 +31,7 @@ def benchmark(agent, num_games=1, game_target=25, bot_memory_reset=True):
 
 
 if __name__ == "__main__":
-    agent = SimpleMCPlanningAgent()
+    # agent = SimpleMCPlanningAgent()
+    agent = RandomAgent()
 
-    benchmark(agent, num_games=100, game_target=25, bot_memory_reset=True)
+    benchmark(agent, num_games=100, game_target=50, bot_memory_reset=True)
