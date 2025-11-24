@@ -23,11 +23,12 @@ class PatternDetector:
         bot_play = pat[0]
         c = len(target) - self.pattern_length
         while c > 0:
-            pat = np.roll(pat, 1)
-            if np.sum(np.abs(target[c:c+self.pattern_length] - pat)) == 0:
+            if np.sum(np.abs(np.array(target[c:c+self.pattern_length]) - np.array(pat))) == 0:
                 pat_grade += 1
             else:
                 break
+            pat = np.roll(pat, 1)
             c -= 1
         pat_grade = min(pat_grade, 2*self.pattern_length) / (2*self.pattern_length)
+        # print(bot_play * pat_grade)
         return bot_play * pat_grade

@@ -26,7 +26,7 @@ class Game:
 
     def play_game(self):
         print("Can you beat the machine?")
-        print("Use 'a' for left, 'd' for right. Press 'q' to quit, 'c' to cheat.")
+        print("Use 's' for left, 'f' for right. Press 'q' to quit, 'c' to cheat.")
         self.draw_status()
 
         while self.user_grade < self.game_target and self.bot_grade < self.game_target:
@@ -154,11 +154,11 @@ class Game:
             return
 
         while True:
-            stroke = input("Your move [a/d/q/c]: ").strip().lower()
-            if stroke == "d":
+            stroke = input("Your move [s/f/q/c]: ").strip().lower()
+            if stroke == "f":
                 self.user_strokes.append(1)
                 break
-            elif stroke == "a":
+            elif stroke == "s":
                 self.user_strokes.append(-1)
                 break
             elif stroke == "c":

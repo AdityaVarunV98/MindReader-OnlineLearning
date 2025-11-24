@@ -24,11 +24,11 @@ class ReactiveDetector:
         # last_result = target[-1]
         
         if ml == 0:
-            last_state = np.array([target_win_loss[-1]])
+            last_state = np.array([target_win_loss[-2]])
             last_idx = int((last_state[-1] + 1) / 2)
             last_result = target[-1]
         else:
-            last_state = np.concatenate([target_win_loss[-ml-1:], target[-ml:]])
+            last_state = np.concatenate([target_win_loss[-ml-2:-1], target[-ml-1:-1]])
             last_idx = int(np.sum(((last_state + 1)/2) * ind_map))
             last_result = target[-1]
 
