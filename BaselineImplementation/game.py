@@ -220,15 +220,15 @@ class Game:
             self.bot = Bot(self.expert_params)
 
         while self.user_grade < self.game_target and self.bot_grade < self.game_target:
-            # Bot move
-            self.bot, bot_move = self.bot.bot_play(self)
-            self.bot_strokes.append(bot_move)
-
             # Agent move (or human input)
             user_move = self.get_user_move()
             if user_move is None:  # user quit
                 self.stop_game_flag = True
                 break
+            
+            # Bot move
+            self.bot, bot_move = self.bot.bot_play(self)
+            self.bot_strokes.append(bot_move)
             self.user_strokes.append(user_move)
 
             # Update scores

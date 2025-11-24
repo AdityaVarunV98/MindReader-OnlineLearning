@@ -21,7 +21,7 @@ class RandomAgent(BaseAgent):
         return 2 * np.random.binomial(1, 0.5) - 1
 
 class AlternateAgent(BaseAgent):
-    """Plays randomly with equal probability"""
+    """Plays alternate"""
     def __init__(self):
         super().__init__(name="RandomAgent")
 
